@@ -1,0 +1,22 @@
+{
+  "name": "media24si/response-cache",
+  "description": "Laravel 5 Response Cache Middleware",
+  "license": "MIT",
+  "keywords": ["laravel", "laravel 5", "cache", "response"],
+  "homepage": "https://github.com/Media24si/ResponseCache",
+  "authors": [
+    {
+      "name": "Bostjan Oblak",
+      "email": "bostjan@muha.cc"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "laravel/framework": "~5.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Media24si\\ResponseCache\\": "src/"
+    }
+  }
+}
