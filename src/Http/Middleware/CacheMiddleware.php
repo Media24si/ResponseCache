@@ -33,10 +33,8 @@ class CacheMiddleware
     {
         if ( $response->isCacheable() ) {
             $key = config('responseCache.key_prefix') . $request->fullUrl();
-
-            $max_age = $response->headers->hasCacheControlDirective('max-age') ? $response->headers->getCacheControlDirective('max-age') : config('responseCache.default_max_age');
+            $max_age = $response->getMaxAge();
             $response->header('X-ResponseCache', true);
-
             \Cache::store(config('responseCache.cache_store'))->put($key, $response, $max_age/60);
         }
     }

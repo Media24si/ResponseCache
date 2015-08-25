@@ -1,13 +1,6 @@
 <?php
 
 return [
-
-    /**
-     *  Default TTL for reponse cache
-     *  default: 15 minutes
-     */
-    'default_ttl' => 900,
-
     /**
      *  Cache key defined in cache.php settings
      */
