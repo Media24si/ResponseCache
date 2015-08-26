@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'enabled' => env('RESPONSE_CACHE_ENABLED', true),
+
     /**
      *  Cache key defined in cache.php settings
      */

@@ -16,7 +16,7 @@ class CacheMiddleware
     public function handle($request, Closure $next)
     {
         // only get methods are allowed
-        if ( $request->isMethod('get')) {
+        if ( $request->isMethod('get') && config('responseCache.enabled') ) {
             $key = config('responseCache.key_prefix') . $request->fullUrl();
 
             $response = \Cache::store( config('responseCache.cache_store') )->get($key);
