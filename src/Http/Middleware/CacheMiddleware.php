@@ -3,6 +3,7 @@
 namespace Media24si\ResponseCache\Http\Middleware;
 
 use Closure;
+use Media24si\ResponseCache\ResponseCacheManager;
 
 class CacheMiddleware
 {
@@ -15,28 +16,22 @@ class CacheMiddleware
      */
     public function handle($request, Closure $next)
     {
-        // only get methods are allowed
-        if ( $request->isMethod('get') && config('responseCache.enabled') ) {
-            $key = config('responseCache.key_prefix') . $request->fullUrl();
+        $url = $request->fullUrl();
+        $cacheManager = new ResponseCacheManager();
 
-            $response = \Cache::store( config('responseCache.cache_store') )->get($key);
-
-            if (null != $response) {
-                return $response;
+        if ($request->isMethod('get') && config('responseCache.enabled')) {
+            $content = $cacheManager->get($url);
+            if ($content != null) {
+                return $content;
             }
         }
+        
+        $response = $next($request);
 
-        return $next($request);
-    }
-
-    public function terminate($request, $response)
-    {
-        if ( $response->isCacheable() ) {
-            $key = config('responseCache.key_prefix') . $request->fullUrl();
-            $max_age = $response->getMaxAge();
-            $response->header('X-ResponseCache', true);
-            \Cache::store(config('responseCache.cache_store'))->put($key, $response, $max_age/60);
+        if (is_a($response, '\Illuminate\Http\Response')) {
+            $cacheManager->saveResponse($url, $response);
         }
-    }
 
+        return $response;
+    }
 }
