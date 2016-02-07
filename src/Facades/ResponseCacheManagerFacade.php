@@ -8,6 +8,6 @@ class ResponseCacheManagerFacade extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'Media24si\ResponseCache\ResponseCacheManager';
+        return 'responseCacheManager';
     }
 }

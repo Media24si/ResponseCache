@@ -28,6 +28,12 @@ class ResponseCacheServiceProvider extends ServiceProvider  {
 	 */
 	public function register()
 	{	
+		$this->app->singleton('responseCacheManager', function ($app) {
+            return new ResponseCacheManager(
+            		Cache::store(config('responseCache.cache_store')),
+            		config('responseCache')
+            );
+        });
 	}
 
 }
