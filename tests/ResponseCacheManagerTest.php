@@ -6,7 +6,8 @@ use Media24si\ResponseCache\ResponseCacheManager;
 
 class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
 {
-    private $testUrl = 'http://foo.com/bar';
+    private $testUrl;
+    private $testKey;
 
     private $manager;
     private $cache;
@@ -16,6 +17,9 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
         $this->cache = new Repository(new ArrayStore());
         $this->cache->flush();
         $this->manager = new ResponseCacheManager($this->cache);
+
+        $this->testUrl = 'http://foo.com/bar';
+        $this->testKey = 'responseCache:' . md5($this->testUrl);
     }
 
     public function test_save_response_not_for_private()
@@ -24,10 +28,8 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
         $response->setContent('foo')
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);
-
-        $data = $this->cache->get('responseCache:' . $this->testUrl);
-        
+        $this->manager->put($this->testUrl, $response);
+        $data = $this->cache->get($this->testKey);
         $this->assertNull($data);
     }
 
@@ -38,9 +40,9 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);
+        $this->manager->put($this->testUrl, $response);
 
-        $data = $this->cache->get('responseCache:' . $this->testUrl);
+        $data = $this->cache->get($this->testKey);
         
         $this->assertNotNull($data);
         $this->assertEquals('foo', $data['content']->getContent());
@@ -53,10 +55,10 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);        
+        $this->manager->put($this->testUrl, $response);        
 
         $tags = $this->cache->get('responseCache:tag:testTag');
-        $this->assertArrayHasKey( 'responseCache:' . $this->testUrl, $tags );
+        $this->assertArrayHasKey( $this->testKey, $tags );
     }
 
     public function test_save_response_sets_multiple_tags() {
@@ -66,13 +68,13 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);        
+        $this->manager->put($this->testUrl, $response);        
 
         $tags = $this->cache->get('responseCache:tag:testTag');
-        $this->assertArrayHasKey( 'responseCache:' . $this->testUrl, $tags );
+        $this->assertArrayHasKey( $this->testKey, $tags );
 
         $tags = $this->cache->get('responseCache:tag:fooBar');
-        $this->assertArrayHasKey( 'responseCache:' . $this->testUrl, $tags );
+        $this->assertArrayHasKey( $this->testKey, $tags );
     }
 
     public function test_get_returns_response() {
@@ -81,7 +83,7 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);        
+        $this->manager->put($this->testUrl, $response);        
 
         $content = $this->manager->get($this->testUrl);
 
@@ -96,13 +98,13 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);        
+        $this->manager->put($this->testUrl, $response);        
 
         $tags = $this->manager->getTag('testTag');
-        $this->assertArrayHasKey( 'responseCache:' . $this->testUrl, $tags );
+        $this->assertArrayHasKey( $this->testKey, $tags );
 
         $tags = $this->manager->getTag('fooBar');
-        $this->assertArrayHasKey( 'responseCache:' . $this->testUrl, $tags );
+        $this->assertArrayHasKey( $this->testKey, $tags );
     }
 
     public function test_flush_tags_clears_tag() {
@@ -112,10 +114,26 @@ class ResponseCacheManagerTest extends PHPUnit_Framework_TestCase
                 ->setPublic()
                 ->setMaxAge('600');
 
-        $this->manager->saveResponse($this->testUrl, $response);        
+        $this->manager->put($this->testUrl, $response);        
 
         $tags = $this->manager->flushTag('testTag');
-        $data = $this->cache->get('responseCache:' . $this->testUrl);        
+        $data = $this->cache->get($this->testKey);
+        
+        $this->assertNull($data);
+    }
+
+    public function test_flush_clear_key() {
+        $response = new \Illuminate\Http\Response();
+        $response->setContent('foo')
+                ->setPublic()
+                ->setMaxAge('600');
+
+        $this->manager->put($this->testUrl, $response);
+        $data = $this->cache->get($this->testKey);
+        $this->assertNotNull($data);
+
+        $this->manager->flush($this->testUrl);
+        $data = $this->cache->get($this->testKey);
         $this->assertNull($data);
     }
 }

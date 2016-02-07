@@ -3,7 +3,6 @@
 namespace Media24si\ResponseCache\Http\Middleware;
 
 use Closure;
-use Media24si\ResponseCache\ResponseCacheManager;
 
 class CacheMiddleware
 {
@@ -30,7 +29,7 @@ class CacheMiddleware
         $response = $next($request);
 
         if (is_a($response, '\Illuminate\Http\Response')) {
-            $cacheManager->saveResponse($url, $response);
+            $cacheManager->put($url, $response);
         }
 
         return $response;

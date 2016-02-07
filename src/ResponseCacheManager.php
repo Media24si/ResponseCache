@@ -22,31 +22,14 @@ class ResponseCacheManager
         $this->config = array_merge($defaults, $config);
     }
 
-    public function flushTag($tag)
-    {
-        $tagKey = $this->config['key_prefix'] . ':tag:' . $tag;
-        $time = time();
-
-        $urls = collect($this->getTag($tag));
-        collect($urls)->reject(function ($value) use ($time) {
-            return $value < $time;
-        })->each(function ($value, $key) {
-            $this->cache->forget($key);
-        });
-
-        $this->cache->forget($tagKey);
-    }
-
-    public function getTag($tag)
-    {
-        $tagKey = $this->config['key_prefix'] . ':tag:' . $tag;
-        return $this->cache->get($tagKey, []);
-    }
-
+    /**
+     * Get content for given url
+     * @param  string $url [description]
+     * @return Response
+     */
     public function get($url)
     {
-        $key = $this->config['key_prefix'] . ':' . $url;
-        $response = $this->cache->get($key);
+        $response = $this->cache->get( $this->generateKey($url) );
 
         if (null != $response) {
             $content = $response['content'];
@@ -57,13 +40,19 @@ class ResponseCacheManager
         return null;
     }
 
-    public function saveResponse($url, Response $response)
+    /**
+     * Save response to cache
+     * @param  string   $url
+     * @param  Response $response
+     * @return  boolena
+     */
+    public function put($url, Response $response)
     {
         if (! $response->isCacheable()) {
-            return;
+            return false;
         }
 
-        $key = $this->config['key_prefix'] . ':' . $url;
+        $key = $this->generateKey($url);
 
         $max_age = $response->getMaxAge();
         $time = time();
@@ -84,23 +73,82 @@ class ResponseCacheManager
         $this->cache->put($key, $cacheArray, $max_age/60);
 
         // save tags
-        if (count($tags) > 0) {
-            $clear = rand(0, 100) > $this->config['garbage_clear_ratio'];
-            $expires = $time + $max_age;
+        $this->assignKeyWithTags($tags, $key, $time+$max_age);
 
-            foreach ($tags as $tag) {
-                $tagKey = $this->config['key_prefix'] . ':tag:' . $tag;
-                $currentValues = $this->cache->get($tagKey, []);
-                $currentValues[$key] = $expires;
+        return true;
+    }
 
-                if ($clear) { // clear garbage
-                    $currentValues = collect($currentValues)->reject(function ($value) use ($time) {
-                        return $value < $time;
-                    })->toArray();
-                }
+    /**
+     * Clear url
+     * @param  string $url
+     */
+    public function flush($url) {
+        return $this->cache->flush($this->generateKey($url));
+    }
 
-                $this->cache->forever($tagKey, $currentValues);
+    public function flushTag($tag)
+    {
+        $time = time();
+
+        $urls = collect($this->getTag($tag));
+        collect($urls)->reject(function ($value) use ($time) {
+            return $value < $time;
+        })->each(function ($value, $key) {
+            $this->cache->forget($key);
+        });
+
+        $this->cache->forget($this->generateTagKey($tag));
+    }
+
+    public function getTag($tag)
+    {
+        return $this->cache->get($this->generateTagKey($tag), []);
+    }
+
+    /**
+     * Generate key for url
+     * @param  string $url
+     * @return string
+     */
+    private function generateKey($url) {
+        return $this->config['key_prefix'] . ':' . md5($url);
+    }
+
+    /**
+     * Generate key for tag
+     * @param  string $tag
+     * @return string
+     */
+    private function generateTagKey($tag) {
+        return $this->config['key_prefix'] . ':tag:' . $tag;
+    }
+
+    /**
+     * Assign key to tags
+     * @param  array  $tags
+     * @param  string $key
+     * @param  int $expires
+     */
+    private function assignKeyWithTags(array $tags = [], $key, $expires) {
+        if ( ! count($tags) ) {
+            return;
+        }
+
+        // decide if array will be cleared of expired items
+        $clear = rand(0, 100) < $this->config['garbage_clear_ratio'];
+
+        foreach ($tags as $tag) {
+            $tagKey = $this->generateTagKey($tag);
+            $currentValues = $this->cache->get($tagKey, []);
+            $currentValues[$key] = $expires;
+
+            if ($clear) { // clear garbage
+                $currentValues = collect($currentValues)->reject(function ($value) {
+                    return $value < time();
+                })->toArray();
             }
+
+            $this->cache->forever($tagKey, $currentValues);
         }
     }
 }

@@ -12,4 +12,9 @@ return [
      * Prefix for cache key
      */
     'key_prefix' => 'response_cache.',
+
+    /**
+     * 30% chanse to clear garbage (old tags array)
+     */
+    'garbage_clear_ratio' => 30
 ];
