@@ -2,7 +2,7 @@
 
 namespace Media24si\ResponseCache;
 
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Contracts\Cache\Repository as CacheContract;
 
 class ResponseCacheManager

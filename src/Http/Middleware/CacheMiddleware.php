@@ -28,7 +28,7 @@ class CacheMiddleware
         
         $response = $next($request);
 
-        if (is_a($response, '\Illuminate\Http\Response')) {
+        if (is_a($response, '\Symfony\Component\HttpFoundation\Response')) {
             $cacheManager->put($url, $response);
         }
 
