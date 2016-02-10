@@ -30,7 +30,7 @@ class ResponseCacheManager
     public function get($url)
     {
         $response = $this->cache->get( $this->generateKey($url) );
-
+                
         if (null != $response) {
             $content = $response['content'];
             $content->header('Age', time() - $response['time']);
