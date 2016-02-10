@@ -16,13 +16,16 @@ class SuperCache
 
         $responseCacheManager = new ResponseCacheManager($cacheRepo, $config);
 
-        $key = self::current_url();
+        $request = \Illuminate\Http\Request::createFromBase( \Symfony\Component\HttpFoundation\Request::createFromGlobals() );
 
-        $response = $responseCacheManager->get($key);
-        if ( $response != null && is_a($response, '\Symfony\Component\HttpFoundation\Response') ) {
-     	   $response->send();
-     	   die;
-    	}
+        $key = $request->fullUrl();
+        if ($request->isMethod('get') && $config['enabled']) {
+            $response = $responseCacheManager->get($key);
+            if ( $response != null && is_a($response, '\Symfony\Component\HttpFoundation\Response') ) {
+         	   $response->send();
+         	   die;
+        	}
+        }
     }
 
     private static function current_url()
