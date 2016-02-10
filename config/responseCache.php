@@ -2,6 +2,7 @@
 
 return [
     'enabled' => env('RESPONSE_CACHE_ENABLED', true),
+    'super_cache' => false,
 
     /**
      *  Cache key defined in cache.php settings

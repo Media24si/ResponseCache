@@ -18,9 +18,8 @@ class CacheMiddleware
         $cacheManager = \App::make('responseCacheManager');
 
         $url = $request->fullUrl();
-        dump($url);
 
-        if ($request->isMethod('get') && config('responseCache.enabled')) {
+        if ($request->isMethod('get') && config('responseCache.enabled') && !config('reponseCache.super_cache') ) {
             $content = $cacheManager->get($url);
             if ($content != null) {
                 return $content;

@@ -27,14 +27,4 @@ class SuperCache
         	}
         }
     }
-
-    private static function current_url()
-    {
-        $pageURL = 'http';
-        if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"]  == "on") {
-            $pageURL .= "s";
-        }
-        $pageURL .= "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-        return $pageURL;
-    }
 }
