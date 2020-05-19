@@ -11,9 +11,14 @@ class SuperCache
         $config = require_once $app->configPath() . '/responseCache.php';
         $cacheConfig = require_once $app->configPath() . '/cache.php';
 
-        $connector = (new \Illuminate\Cache\MemcachedConnector())->connect($cacheConfig['stores']['memcached']['servers']);
-        $cacheRepo = new Repository(new \Illuminate\Cache\MemcachedStore($connector, $cacheConfig['prefix']));
-
+        try {
+            $connector = (new \Illuminate\Cache\MemcachedConnector())->connect($cacheConfig['stores']['memcached']['servers']);    
+            $cacheRepo = new Repository(new \Illuminate\Cache\MemcachedStore($connector, $cacheConfig['prefix']));
+        }
+        catch(\Exception $e) {
+            return;
+        }
+    
         $responseCacheManager = new ResponseCacheManager($cacheRepo, $config);
 
         $request = \Illuminate\Http\Request::createFromBase( \Symfony\Component\HttpFoundation\Request::createFromGlobals() );
