@@ -15,7 +15,15 @@ class CacheMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $cacheManager = \App::make('responseCacheManager');
+        $cacheManager = null;
+        try {
+            $cacheManager = \App::make('responseCacheManager');
+        }
+        catch(\Exception $e) {}
+
+        if ($cacheManager === null) {
+            return $next($request);
+        }
 
         $url = $request->fullUrl();
 
